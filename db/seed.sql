@@ -38,7 +38,7 @@ INSERT INTO scene_vocab (scene_id, vocab_id) SELECT 3, id FROM vocab WHERE surfa
 INSERT INTO vocab (surface, reading, meaning, kind, jlpt_level) VALUES ('逃', 'に(げる) / とう', '도망할 도', 'kanji', 3) ON DUPLICATE KEY UPDATE meaning = VALUES(meaning), kind = VALUES(kind), jlpt_level = VALUES(jlpt_level);
 INSERT INTO scene_vocab (scene_id, vocab_id) SELECT 3, id FROM vocab WHERE surface = '逃' AND reading = 'に(げる) / とう';
 INSERT INTO quizzes (id, scene_id, type, question, sort_order) VALUES (301, 3, 'short_answer', '하치와레가 말한 「逃げようッ」는 어떻게 읽을까요?', 1);
-INSERT INTO quiz_answers (quiz_id, answers, explanation) VALUES (301, '["にげようッ","にげよう","니게요옷","니게요"]', '정답은 장면 1의 대사 「逃げようッ」에서 바로 확인할 수 있어요. 「逃げよう」는 「にげよう」라고 읽고, 뜻은 “도망치자”예요. 동사 「逃げる(にげる, 도망치다)」에 「〜よう」가 붙으면 “~하자”라는 권유 표현이 됩니다.');
+INSERT INTO quiz_answers (quiz_id, answers, explanation) VALUES (301, '["にげようッ","にげよう","니게요옷","니게요"]', '정답은 하치와레의 대사 「逃げようッ」에서 바로 확인할 수 있어요. 「逃げよう」는 「にげよう」라고 읽고, 뜻은 “도망치자”예요. 동사 「逃げる(にげる, 도망치다)」에 「〜よう」가 붙으면 “~하자”라는 권유 표현이 됩니다.');
 INSERT INTO quizzes (id, scene_id, type, question, sort_order) VALUES (302, 3, 'short_answer', '하치와레는 친구들에게 무엇을 하자고 말하고 있나요?', 2);
 INSERT INTO quiz_answers (quiz_id, answers, explanation) VALUES (302, '["도망치자","도망가자","도망","逃げよう"]', '정답은 대사 1의 「逃げようッ(にげようッ)」에서 바로 알 수 있어요. 「逃げる(にげる)」는 ‘도망치다’라는 뜻이고, 「〜よう」는 “~하자”라고 권유할 때 쓰는 표현이라서 「逃げよう」는 “도망치자/도망가자”가 됩니다. 마지막의 작은 「ッ」는 말에 힘이 들어간 느낌을 나타내요.');
 
