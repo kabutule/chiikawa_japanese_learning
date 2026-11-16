@@ -1,6 +1,6 @@
 {
   "id": 2,
-  "title": "TODO: 장면 제목",
+  "title": "모몽가 이야",
   "source_url": "",
   "posted_at": null,
   "level": 1,
@@ -11,16 +11,30 @@
     "ja": "/images/scenes/002/ja.png"
   },
   "lines": [
-    { "ja": "TODO", "reading": "", "ko": "" }
+    {
+      "ja": "イヤッ",
+      "reading": "いやっ",
+      "ko": "싫엇"
+    }
   ],
   "vocab": [
-    { "surface": "TODO", "reading": "", "meaning": "TODO", "kind": "word", "jlpt_level": null }
+    {
+      "surface": "嫌",
+      "reading": "いや",
+      "meaning": "싫다, 싫음",
+      "kind": "word",
+      "jlpt_level": 4
+    }
   ],
   "quizzes": [
     {
       "type": "short_answer",
-      "question": "TODO",
-      "answers": ["TODO"],
+      "question": "지금 모몽가가 말하고 있는 말은 어떻게 발음할까요?",
+      "answers": [
+        "イヤッ",
+        "いやっ",
+        "이얏"
+      ],
       "explanation": null
     }
   ]

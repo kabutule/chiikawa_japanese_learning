@@ -1,6 +1,6 @@
 {
   "id": 3,
-  "title": "TODO: 장면 제목",
+  "title": "하치와레 니게요옷",
   "source_url": "",
   "posted_at": null,
   "level": 1,
@@ -11,16 +11,39 @@
     "ja": "/images/scenes/003/ja.png"
   },
   "lines": [
-    { "ja": "TODO", "reading": "", "ko": "" }
+    {
+      "ja": "逃げようッ",
+      "reading": "にげようッ",
+      "ko": "도망치자"
+    }
   ],
   "vocab": [
-    { "surface": "TODO", "reading": "", "meaning": "TODO", "kind": "word", "jlpt_level": null }
+    {
+      "surface": "逃げる",
+      "reading": "にげる",
+      "meaning": "도망치다, 달아나다",
+      "kind": "word",
+      "jlpt_level": 3
+    },
+    {
+      "surface": "逃",
+      "reading": "に(げる) / とう",
+      "meaning": "도망할 도",
+      "kind": "kanji",
+      "jlpt_level": 3
+    }
   ],
   "quizzes": [
     {
       "type": "short_answer",
-      "question": "TODO",
-      "answers": ["TODO"],
+      "question": "하치와레가 말한 「逃げようッ」는 어떻게 읽을까요?",
+      "answers": ["にげようッ", "にげよう", "니게요옷", "니게요"],
+      "explanation": null
+    },
+    {
+      "type": "short_answer",
+      "question": "하치와레는 친구들에게 무엇을 하자고 말하고 있나요?",
+      "answers": ["도망치자", "도망가자", "도망", "逃げよう"],
       "explanation": null
     }
   ]
