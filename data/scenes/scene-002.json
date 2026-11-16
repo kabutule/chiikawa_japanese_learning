@@ -1,6 +1,6 @@
 {
   "id": 2,
-  "title": "TODO: 장면 제목",
+  "title": "모몽가 이야",
   "source_url": "",
   "posted_at": null,
   "level": 1,
@@ -11,17 +11,31 @@
     "ja": "/images/scenes/002/ja.png"
   },
   "lines": [
-    { "ja": "TODO", "reading": "", "ko": "" }
+    {
+      "ja": "イヤッ",
+      "reading": "いやっ",
+      "ko": "싫엇"
+    }
   ],
   "vocab": [
-    { "surface": "TODO", "reading": "", "meaning": "TODO", "kind": "word", "jlpt_level": null }
+    {
+      "surface": "嫌",
+      "reading": "いや",
+      "meaning": "싫다, 싫음",
+      "kind": "word",
+      "jlpt_level": 4
+    }
   ],
   "quizzes": [
     {
       "type": "short_answer",
-      "question": "TODO",
-      "answers": ["TODO"],
-      "explanation": null
+      "question": "지금 모몽가가 말하고 있는 말은 어떻게 발음할까요?",
+      "answers": [
+        "イヤッ",
+        "いやっ",
+        "이얏"
+      ],
+      "explanation": "정답은 장면의 대사 「イヤッ」에서 그대로 나와요. 「イヤッ」는 히라가나로 「いやっ」라고 읽고, 「싫어!」 또는 「싫엇!」처럼 거부하는 느낌을 나타내요. 끝의 작은 「ッ」는 말을 짧고 강하게 끊는 느낌을 줍니다."
     }
   ]
 }

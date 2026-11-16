@@ -1,0 +1,232 @@
+:root {
+  --bg: #fffaf3;
+  --card: #ffffff;
+  --text: #2b2622;
+  --muted: #7a7068;
+  --line: #eadfd2;
+  --accent: #f29bb0;
+  --accent-ink: #b8466a;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; } /* display 를 지정한 요소에서도 hidden 이 먹도록 */
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Pretendard", "Noto Sans KR", "Noto Sans JP", system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.top {
+  position: sticky; top: 0; z-index: 2;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.brand { font-weight: 700; color: var(--accent-ink); text-decoration: none; }
+
+main { max-width: 560px; margin: 0 auto; padding: 16px; }
+
+h1 { font-size: 1.25rem; margin: 4px 0 12px; }
+h2 { font-size: 1rem; margin: 24px 0 8px; color: var(--muted); }
+
+.status { color: var(--muted); padding: 24px 0; text-align: center; }
+.status.error { color: var(--accent-ink); }
+
+/* 장면 목록 */
+.scene-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.scene-list a {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); color: inherit; text-decoration: none;
+}
+.scene-list a:hover { border-color: var(--accent); }
+.level { font-size: .8rem; color: var(--muted); }
+
+/* 이미지 뷰어 */
+.viewer {
+  position: relative;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden;
+  touch-action: pan-y; /* 세로 스크롤은 브라우저, 가로 스와이프는 우리가 처리 */
+  user-select: none;
+}
+.viewer img { display: block; width: 100%; height: auto; pointer-events: none; }
+.layer-tag {
+  position: absolute; top: 10px; left: 10px;
+  padding: 2px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.9); border: 1px solid var(--line);
+  font-size: .8rem; font-weight: 600;
+}
+.nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--line); background: rgba(255,255,255,.9);
+  font-size: 1.2rem; cursor: pointer;
+}
+.nav:disabled { opacity: .3; cursor: default; }
+.nav.prev { left: 8px; }
+.nav.next { right: 8px; }
+.dots { display: flex; justify-content: center; gap: 6px; margin: 10px 0 0; }
+.dots button {
+  border: 0; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+  background: var(--line); color: var(--muted); font-size: .75rem;
+}
+.dots button[aria-current="true"] { background: var(--accent); color: #fff; }
+
+/* 대사 */
+.lines { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.lines li { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.ja { font-size: 1.3rem; font-weight: 600; }
+.reading { color: var(--accent-ink); font-size: .9rem; }
+.ko { color: var(--muted); font-size: .9rem; }
+
+/* 단어 */
+.vocab { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.word {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.word .surface { font-size: 1.4rem; font-weight: 700; }
+.word .meta { font-size: .75rem; color: var(--muted); }
+.word.kanji .surface { color: var(--accent-ink); }
+
+/* 퀴즈 */
+.quizzes { display: grid; gap: 12px; }
+.quiz {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px;
+}
+.quiz.solved { border-color: #9ccf9a; }
+.question { display: block; font-weight: 600; margin-bottom: 10px; }
+.qnum {
+  display: inline-block; margin-right: 6px; padding: 0 8px; border-radius: 999px;
+  background: var(--accent); color: #fff; font-size: .75rem; vertical-align: 2px;
+}
+.answer-row { display: flex; gap: 8px; }
+.answer-row input {
+  flex: 1; min-width: 0;
+  padding: 10px 12px; font: inherit; font-size: 1rem; /* 16px 이상: iOS 확대 방지 */
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text);
+}
+.answer-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.answer-row input[readonly] { background: #faf6f1; }
+.answer-row button {
+  padding: 10px 16px; font: inherit; font-weight: 600;
+  border: 0; border-radius: 10px; background: var(--accent-ink); color: #fff; cursor: pointer;
+}
+.answer-row button:disabled { opacity: .55; cursor: default; }
+.quiz.solved .answer-row button { background: #5a9a58; opacity: 1; }
+
+.result:empty { display: none; }
+.result { margin-top: 10px; }
+.result p { margin: 6px 0 0; }
+.verdict { font-weight: 700; }
+.verdict.ok { color: #3f7d3d; }
+.verdict.ng { color: var(--accent-ink); }
+.alt-note { font-size: .9rem; color: var(--muted); }
+.hint { font-size: .95rem; }
+.hint.error { color: var(--accent-ink); }
+.tag {
+  display: inline-block; margin-right: 6px; padding: 0 8px; border-radius: 999px;
+  border: 1px solid var(--line); font-size: .75rem; color: var(--muted); vertical-align: 1px;
+}
+.explain { margin-top: 8px; }
+.explain summary { cursor: pointer; color: var(--accent-ink); font-weight: 600; }
+.explain p { background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+.loading { color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--accent-ink);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+/* ---------- 단계(익히기 → 퀴즈 → 확인) ---------- */
+/* data-show 에 현재 단계가 없는 요소는 숨긴다 */
+#app[data-phase="learn"] [data-show]:not([data-show~="learn"]),
+#app[data-phase="cards"] [data-show]:not([data-show~="cards"]),
+#app[data-phase="quiz"] [data-show]:not([data-show~="quiz"]),
+#app[data-phase="review"] [data-show]:not([data-show~="review"]) { display: none; }
+/* 퀴즈 중에는 대사·단어를 숨긴다 (떠올려서 풀기) */
+#app[data-phase="quiz"] #study { display: none; }
+/* 카드 단계에서는 이미지와 대사·단어를 모두 숨기고 카드에만 집중 */
+#app[data-phase="cards"] #study,
+#app[data-phase="cards"] #viewer,
+#app[data-phase="cards"] #dots { display: none; }
+
+/* ---------- 외우기 카드 ---------- */
+.card-progress { text-align: center; color: var(--muted); font-size: .85rem; margin: 4px 0 10px; }
+.flashcard {
+  display: grid; width: 100%; min-height: 240px; padding: 0;
+  border: 0; background: none; cursor: pointer; perspective: 900px;
+  font: inherit; color: inherit;
+}
+.flashcard .face {
+  grid-area: 1 / 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 24px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(90, 60, 40, .06);
+  backface-visibility: hidden;
+  transition: transform .45s ease;
+}
+.flashcard .back { transform: rotateY(180deg); }
+.flashcard.flipped .front { transform: rotateY(-180deg); }
+.flashcard.flipped .back { transform: rotateY(0deg); }
+.flashcard:focus-visible .face { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .flashcard .face { transition: none; } }
+.card-kind {
+  padding: 0 10px; border-radius: 999px; border: 1px solid var(--line);
+  font-size: .75rem; color: var(--muted);
+}
+.card-ja { font-size: 2.4rem; font-weight: 700; line-height: 1.2; text-align: center; word-break: keep-all; }
+.card-ja.small { font-size: 1.4rem; }
+.flashcard .reading { font-size: 1.1rem; }
+.card-meaning { font-size: 1.05rem; text-align: center; }
+#card-controls { margin-top: 12px; }
+.note.center { text-align: center; }
+#cards-done { margin-top: 12px; }
+.text-button {
+  display: block; margin: 14px auto 0; padding: 6px;
+  border: 0; background: none; color: var(--muted); font: inherit; font-size: .85rem;
+  text-decoration: underline; cursor: pointer;
+}
+
+.steps {
+  display: flex; gap: 6px; list-style: none; padding: 0; margin: 0 0 12px;
+  counter-reset: step;
+}
+.steps li {
+  flex: 1; text-align: center; padding: 6px 0; border-radius: 999px;
+  background: var(--line); color: var(--muted); font-size: .8rem; font-weight: 600;
+  counter-increment: step;
+}
+.steps li::before { content: counter(step) ". "; }
+.steps li.done { background: #f6dce4; color: var(--accent-ink); }
+.steps li.current { background: var(--accent); color: #fff; }
+
+.phase-actions { margin: 20px 0 0; }
+.phase-actions .note { font-size: .85rem; color: var(--muted); margin: 0 0 10px; }
+.primary, .secondary {
+  display: inline-flex; justify-content: center; align-items: center;
+  width: 100%; padding: 13px 16px; border-radius: 12px;
+  font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+}
+.primary { border: 0; background: var(--accent-ink); color: #fff; }
+.secondary { border: 1px solid var(--line); background: var(--card); color: var(--text); }
+.button-row { display: flex; gap: 8px; }
+.button-row > * { flex: 1; }
+.summary {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px;
+}
+.summary-text { margin: 0 0 12px; font-weight: 600; }
+.summary.top { margin: 0 0 12px; }
+
+.scene-nav { display: flex; justify-content: space-between; margin: 28px 0 8px; }
+.scene-nav a { color: var(--accent-ink); }

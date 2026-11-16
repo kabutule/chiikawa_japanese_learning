@@ -1,30 +1,41 @@
 {
   "id": 1,
-  "title": "[예시] 주먹밥 장면 — 실제 장면으로 교체하세요",
+  "title": "우사기 야하",
   "source_url": "",
   "posted_at": null,
   "level": 1,
   "sort_order": 1,
   "images": {
     "ko": "/images/scenes/001/ko.png",
-    "furigana": "/images/scenes/001/furigana.png",
+    "furigana": "/images/scenes/001/ko.png",
     "ja": "/images/scenes/001/ja.png"
   },
   "lines": [
-    { "ja": "おにぎり、食べる？", "reading": "おにぎり、たべる？", "ko": "주먹밥 먹을래?" },
-    { "ja": "うん！ありがとう！", "reading": "うん！ありがとう！", "ko": "응! 고마워!" }
+    {
+      "ja": "ヤハ",
+      "reading": "やは",
+      "ko": "야하"
+    }
   ],
   "vocab": [
-    { "surface": "おにぎり", "reading": "おにぎり", "meaning": "주먹밥", "kind": "word", "jlpt_level": 5 },
-    { "surface": "食べる", "reading": "たべる", "meaning": "먹다", "kind": "word", "jlpt_level": 5 },
-    { "surface": "食", "reading": "た(べる) / しょく", "meaning": "먹을 식", "kind": "kanji", "jlpt_level": 5 }
+    {
+      "surface": "ヤハ",
+      "reading": "やは",
+      "meaning": "우사기의 감탄사 (특별한 뜻 없음)",
+      "kind": "word",
+      "jlpt_level": null
+    }
   ],
   "quizzes": [
     {
       "type": "short_answer",
-      "question": "첫 번째 대사에서 권하고 있는 음식은 무엇인가요?",
-      "answers": ["おにぎり", "오니기리", "주먹밥"],
-      "explanation": null
+      "question": "첫 번째 대사에서 발음은 무엇인가요?",
+      "answers": [
+        "ヤハ",
+        "やは",
+        "야하"
+      ],
+      "explanation": "정답은 첫 번째 대사 「ヤハ」에 바로 나와요. 「ヤハ」의 읽기는 히라가나로 「やは」이고, 한국어 발음으로는 “야하”에 가깝습니다. 이 표현은 여기서 우사기의 감탄사로 쓰인 말이라 특별한 뜻은 없어요."
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "id": 3,
-  "title": "TODO: 장면 제목",
+  "title": "하치와레 니게요옷",
   "source_url": "",
   "posted_at": null,
   "level": 1,
@@ -11,17 +11,50 @@
     "ja": "/images/scenes/003/ja.png"
   },
   "lines": [
-    { "ja": "TODO", "reading": "", "ko": "" }
+    {
+      "ja": "逃げようッ",
+      "reading": "にげようッ",
+      "ko": "도망치자"
+    }
   ],
   "vocab": [
-    { "surface": "TODO", "reading": "", "meaning": "TODO", "kind": "word", "jlpt_level": null }
+    {
+      "surface": "逃げる",
+      "reading": "にげる",
+      "meaning": "도망치다, 달아나다",
+      "kind": "word",
+      "jlpt_level": 3
+    },
+    {
+      "surface": "逃",
+      "reading": "に(げる) / とう",
+      "meaning": "도망할 도",
+      "kind": "kanji",
+      "jlpt_level": 3
+    }
   ],
   "quizzes": [
     {
       "type": "short_answer",
-      "question": "TODO",
-      "answers": ["TODO"],
-      "explanation": null
+      "question": "하치와레가 말한 「逃げようッ」는 어떻게 읽을까요?",
+      "answers": [
+        "にげようッ",
+        "にげよう",
+        "니게요옷",
+        "니게요"
+      ],
+      "explanation": "정답은 하치와레의 대사 「逃げようッ」에서 바로 확인할 수 있어요. 「逃げよう」는 「にげよう」라고 읽고, 뜻은 “도망치자”예요. 동사 「逃げる(にげる, 도망치다)」에 「〜よう」가 붙으면 “~하자”라는 권유 표현이 됩니다."
+    },
+    {
+      "type": "short_answer",
+      "question": "하치와레는 친구들에게 무엇을 하자고 말하고 있나요?",
+      "answers": [
+        "도망치자",
+        "도망가자",
+        "도망",
+        "逃げよう"
+      ],
+      "explanation": "정답은 대사 1의 「逃げようッ(にげようッ)」에서 바로 알 수 있어요. 「逃げる(にげる)」는 ‘도망치다’라는 뜻이고, 「〜よう」는 “~하자”라고 권유할 때 쓰는 표현이라서 「逃げよう」는 “도망치자/도망가자”가 됩니다. 마지막의 작은 「ッ」는 말에 힘이 들어간 느낌을 나타내요."
     }
   ]
 }

@@ -5,7 +5,7 @@
 1. `data/scenes/scene-00N.json` 작성 (형식은 `scene-001.json` 예시 참고)
 2. 이미지 3장을 `public/images/scenes/00N/{ko,furigana,ja}.png` 에 넣기
 3. `npm run check:data` — 오류/TODO 확인
-4. `npm run gen:explanations` — 해설 AI 생성 (`.env` 에 `ANTHROPIC_API_KEY`), `git diff data/scenes` 로 검토
+4. `npm run gen:explanations` — 해설 AI 생성 (`.env` 에 `OPENAI_API_KEY`), `git diff data/scenes` 로 검토
 5. `npm run build:seed` → `db/seed.sql` 생성
 6. DB 적용
    ```
