@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pool } from "./db.mjs";
 import { scenesRouter } from "./routes/scenes.mjs";
+import { quizzesRouter } from "./routes/quizzes.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.PORT || 3000);
@@ -12,6 +13,7 @@ const app = express();
 app.use(express.json({ limit: "10kb" }));
 
 app.use("/api/scenes", scenesRouter);
+app.use("/api/quizzes", quizzesRouter);
 app.use("/api", (_req, res) => res.status(404).json({ error: "없는 API" }));
 
 // 프론트(HTML/JS/CSS)와 장면 이미지
