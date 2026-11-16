@@ -95,10 +95,21 @@ async function renderScene(id) {
     </div>
 
     <h2>퀴즈</h2>
-    <ol class="quizzes">
-      ${scene.quizzes.map((q) => `<li>${esc(q.question)}</li>`).join("")}
-    </ol>
-    <p class="note">답 입력과 채점은 다음 단계에서 붙어요.</p>
+    <div class="quizzes">
+      ${scene.quizzes
+        .map(
+          (q, i) => `<form class="quiz" data-quiz-id="${esc(q.id)}" novalidate>
+            <label class="question" for="quiz-${esc(q.id)}"><span class="qnum">Q${i + 1}</span>${esc(q.question)}</label>
+            <div class="answer-row">
+              <input id="quiz-${esc(q.id)}" name="answer" type="text" maxlength="300" autocomplete="off"
+                     autocapitalize="off" spellcheck="false" placeholder="일본어나 한국어로 입력" required>
+              <button type="submit">제출</button>
+            </div>
+            <div class="result" aria-live="polite"></div>
+          </form>`
+        )
+        .join("")}
+    </div>
 
     <nav class="scene-nav">
       ${prevScene ? `<a href="#/scenes/${prevScene.id}">‹ ${esc(prevScene.title)}</a>` : "<span></span>"}
@@ -106,6 +117,103 @@ async function renderScene(id) {
     </nav>`;
 
   setupViewer(layers);
+  document.querySelectorAll("form.quiz").forEach(setupQuiz);
+}
+
+// ---------- 퀴즈 ----------
+// 비로그인 풀이 기록용 랜덤 id. 저장이 막힌 환경이면 이번 접속 동안만 쓴다.
+const clientId = (() => {
+  try {
+    let id = localStorage.getItem("client_id");
+    if (!id) localStorage.setItem("client_id", (id = crypto.randomUUID()));
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+})();
+
+const ERROR_TYPE_LABEL = { vocab: "단어 뜻", reading: "읽기", context: "문맥" };
+const CLIENT_TIMEOUT_MS = 15000; // 서버 AI 타임아웃(10초)보다 길게
+
+async function submitAnswer(quizId, answer) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), CLIENT_TIMEOUT_MS);
+  try {
+    const res = await fetch(`/api/quizzes/${quizId}/answer`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ answer, client_id: clientId }),
+      signal: ctrl.signal,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `채점 요청 실패 (${res.status})`);
+    return body;
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("채점이 오래 걸리고 있어요. 잠시 후 다시 제출해 주세요.");
+    if (e instanceof TypeError) throw new Error("서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.");
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function renderResult(r) {
+  if (r.correct) {
+    return `
+      <p class="verdict ok">정답이에요!</p>
+      ${r.alt_note ? `<p class="alt-note">${esc(r.alt_note)}</p>` : ""}
+      ${
+        r.explanation
+          ? `<details class="explain"><summary>왜 정답일까?</summary><p>${esc(r.explanation)}</p></details>`
+          : ""
+      }`;
+  }
+  const type = ERROR_TYPE_LABEL[r.error_type];
+  return `
+    <p class="verdict ng">아쉬워요, 다시 해 볼까요?</p>
+    <p class="hint">${type ? `<span class="tag">${esc(type)}</span>` : ""}${esc(r.hint)}</p>`;
+}
+
+function setupQuiz(form) {
+  const input = form.elements.answer;
+  const button = form.querySelector("button");
+  const result = form.querySelector(".result");
+
+  // 일본어 IME 변환 확정용 Enter 로 제출되지 않게
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.isComposing || e.keyCode === 229)) e.preventDefault();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const answer = input.value.trim();
+    if (!answer) {
+      result.innerHTML = `<p class="hint">답을 입력해 주세요.</p>`;
+      input.focus();
+      return;
+    }
+
+    button.disabled = true;
+    input.readOnly = true;
+    button.textContent = "채점 중…";
+    result.innerHTML = `<p class="loading"><span class="spinner" aria-hidden="true"></span>채점하고 있어요</p>`;
+
+    try {
+      const r = await submitAnswer(form.dataset.quizId, answer);
+      result.innerHTML = renderResult(r);
+      form.classList.toggle("solved", r.correct);
+      if (r.correct) {
+        button.textContent = "정답";
+        return; // 맞힌 퀴즈는 잠가 둔다
+      }
+      input.select();
+    } catch (err) {
+      result.innerHTML = `<p class="hint error">${esc(err.message)}</p>`;
+    }
+    button.disabled = false;
+    input.readOnly = false;
+    button.textContent = "제출";
+  });
 }
 
 function setupViewer(layers) {

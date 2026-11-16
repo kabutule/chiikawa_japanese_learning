@@ -93,10 +93,57 @@ h2 { font-size: 1rem; margin: 24px 0 8px; color: var(--muted); }
 .word .meta { font-size: .75rem; color: var(--muted); }
 .word.kanji .surface { color: var(--accent-ink); }
 
-/* 퀴즈 (5단계에서 입력·채점 추가) */
-.quizzes { padding-left: 20px; margin: 0; }
-.quizzes li { margin-bottom: 6px; }
-.note { font-size: .8rem; color: var(--muted); }
+/* 퀴즈 */
+.quizzes { display: grid; gap: 12px; }
+.quiz {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px;
+}
+.quiz.solved { border-color: #9ccf9a; }
+.question { display: block; font-weight: 600; margin-bottom: 10px; }
+.qnum {
+  display: inline-block; margin-right: 6px; padding: 0 8px; border-radius: 999px;
+  background: var(--accent); color: #fff; font-size: .75rem; vertical-align: 2px;
+}
+.answer-row { display: flex; gap: 8px; }
+.answer-row input {
+  flex: 1; min-width: 0;
+  padding: 10px 12px; font: inherit; font-size: 1rem; /* 16px 이상: iOS 확대 방지 */
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text);
+}
+.answer-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.answer-row input[readonly] { background: #faf6f1; }
+.answer-row button {
+  padding: 10px 16px; font: inherit; font-weight: 600;
+  border: 0; border-radius: 10px; background: var(--accent-ink); color: #fff; cursor: pointer;
+}
+.answer-row button:disabled { opacity: .55; cursor: default; }
+.quiz.solved .answer-row button { background: #5a9a58; opacity: 1; }
+
+.result:empty { display: none; }
+.result { margin-top: 10px; }
+.result p { margin: 6px 0 0; }
+.verdict { font-weight: 700; }
+.verdict.ok { color: #3f7d3d; }
+.verdict.ng { color: var(--accent-ink); }
+.alt-note { font-size: .9rem; color: var(--muted); }
+.hint { font-size: .95rem; }
+.hint.error { color: var(--accent-ink); }
+.tag {
+  display: inline-block; margin-right: 6px; padding: 0 8px; border-radius: 999px;
+  border: 1px solid var(--line); font-size: .75rem; color: var(--muted); vertical-align: 1px;
+}
+.explain { margin-top: 8px; }
+.explain summary { cursor: pointer; color: var(--accent-ink); font-weight: 600; }
+.explain p { background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+.loading { color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--accent-ink);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 
 .scene-nav { display: flex; justify-content: space-between; margin: 28px 0 8px; }
 .scene-nav a { color: var(--accent-ink); }
