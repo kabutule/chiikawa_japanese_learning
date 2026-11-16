@@ -10,6 +10,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* display 를 지정한 요소에서도 hidden 이 먹도록 */
 
 body {
   margin: 0;
@@ -148,10 +149,53 @@ h2 { font-size: 1rem; margin: 24px 0 8px; color: var(--muted); }
 /* ---------- 단계(익히기 → 퀴즈 → 확인) ---------- */
 /* data-show 에 현재 단계가 없는 요소는 숨긴다 */
 #app[data-phase="learn"] [data-show]:not([data-show~="learn"]),
+#app[data-phase="cards"] [data-show]:not([data-show~="cards"]),
 #app[data-phase="quiz"] [data-show]:not([data-show~="quiz"]),
 #app[data-phase="review"] [data-show]:not([data-show~="review"]) { display: none; }
 /* 퀴즈 중에는 대사·단어를 숨긴다 (떠올려서 풀기) */
 #app[data-phase="quiz"] #study { display: none; }
+/* 카드 단계에서는 이미지와 대사·단어를 모두 숨기고 카드에만 집중 */
+#app[data-phase="cards"] #study,
+#app[data-phase="cards"] #viewer,
+#app[data-phase="cards"] #dots { display: none; }
+
+/* ---------- 외우기 카드 ---------- */
+.card-progress { text-align: center; color: var(--muted); font-size: .85rem; margin: 4px 0 10px; }
+.flashcard {
+  display: grid; width: 100%; min-height: 240px; padding: 0;
+  border: 0; background: none; cursor: pointer; perspective: 900px;
+  font: inherit; color: inherit;
+}
+.flashcard .face {
+  grid-area: 1 / 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 24px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(90, 60, 40, .06);
+  backface-visibility: hidden;
+  transition: transform .45s ease;
+}
+.flashcard .back { transform: rotateY(180deg); }
+.flashcard.flipped .front { transform: rotateY(-180deg); }
+.flashcard.flipped .back { transform: rotateY(0deg); }
+.flashcard:focus-visible .face { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .flashcard .face { transition: none; } }
+.card-kind {
+  padding: 0 10px; border-radius: 999px; border: 1px solid var(--line);
+  font-size: .75rem; color: var(--muted);
+}
+.card-ja { font-size: 2.4rem; font-weight: 700; line-height: 1.2; text-align: center; word-break: keep-all; }
+.card-ja.small { font-size: 1.4rem; }
+.flashcard .reading { font-size: 1.1rem; }
+.card-meaning { font-size: 1.05rem; text-align: center; }
+#card-controls { margin-top: 12px; }
+.note.center { text-align: center; }
+#cards-done { margin-top: 12px; }
+.text-button {
+  display: block; margin: 14px auto 0; padding: 6px;
+  border: 0; background: none; color: var(--muted); font: inherit; font-size: .85rem;
+  text-decoration: underline; cursor: pointer;
+}
 
 .steps {
   display: flex; gap: 6px; list-style: none; padding: 0; margin: 0 0 12px;

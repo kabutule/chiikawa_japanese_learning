@@ -1,7 +1,8 @@
 // 장면 목록(#/) + 장면 화면(#/scenes/:id). 빌드 없이 쓰는 순수 JS.
 //
-// 장면 화면은 3단계로 진행한다.
+// 장면 화면은 4단계로 진행한다.
 //   learn  (익히기)  모든 이미지 레이어 + 대사 + 단어를 보며 외운다
+//   cards  (카드)    단어·대사 카드를 뒤집으며 스스로 확인. 헷갈린 카드는 다시 나온다
 //   quiz   (퀴즈)    원문 이미지만 남기고 대사·단어를 숨긴 채 답을 떠올려 입력
 //   review (확인)    결과 요약 + 숨겼던 정보 다시 공개, 다시 풀기 / 다음 장면
 const app = document.getElementById("app");
@@ -84,6 +85,7 @@ async function renderScene(id) {
 
     <ol class="steps" aria-label="학습 단계">
       <li data-step="learn">익히기</li>
+      <li data-step="cards">카드</li>
       <li data-step="quiz">퀴즈</li>
       <li data-step="review">확인</li>
     </ol>
@@ -134,9 +136,29 @@ async function renderScene(id) {
     </section>
 
     <div class="phase-actions" data-show="learn">
-      <p class="note">이미지를 넘겨 보고 대사와 단어를 외워 보세요. 퀴즈에서는 원문 그림만 보여요.</p>
-      <button class="primary" id="to-quiz">다 외웠어요, 퀴즈 풀기</button>
+      <p class="note">이미지를 넘겨 보고 대사와 단어를 외워 보세요. 다음은 카드로 확인하고, 퀴즈에서는 원문 그림만 보여요.</p>
+      <button class="primary" id="to-cards">다 외웠어요, 카드로 확인하기</button>
     </div>
+
+    <section id="cards-section" data-show="cards">
+      <p class="card-progress" id="card-progress"></p>
+      <button type="button" class="flashcard" id="flashcard" aria-label="카드 뒤집기">
+        <span class="face front" id="card-front"></span>
+        <span class="face back" id="card-back"></span>
+      </button>
+      <div id="card-controls">
+        <p class="note center" id="card-tip">떠올려 본 다음 카드를 눌러 뒷면을 확인하세요.</p>
+        <div class="button-row" id="card-grade" hidden>
+          <button class="secondary" id="card-again">헷갈려요</button>
+          <button class="primary" id="card-know">알아요</button>
+        </div>
+      </div>
+      <div class="summary" id="cards-done" hidden>
+        <p class="summary-text" id="cards-summary"></p>
+        <button class="primary" id="to-quiz">퀴즈 풀기</button>
+      </div>
+      <button type="button" class="text-button" id="skip-cards">카드 건너뛰고 퀴즈 풀기</button>
+    </section>
 
     <section id="quiz-section" data-show="quiz review">
       <h2>퀴즈</h2>
@@ -167,6 +189,7 @@ async function renderScene(id) {
     </nav>`;
 
   const viewer = createViewer();
+  const cards = createCards(buildDeck(scene), () => document.getElementById("to-quiz").focus());
   const forms = [...document.querySelectorAll("form.quiz")];
   // 퀴즈별 상태: 시도 횟수, 정답 여부
   let quizState = new Map();
@@ -176,10 +199,11 @@ async function renderScene(id) {
     app.dataset.phase = phase;
     viewer.setLayers(phase === "quiz" ? quizLayers : allLayers);
     document.querySelectorAll(".steps li").forEach((li) => {
-      const order = ["learn", "quiz", "review"];
+      const order = ["learn", "cards", "quiz", "review"];
       li.classList.toggle("current", li.dataset.step === phase);
       li.classList.toggle("done", order.indexOf(li.dataset.step) < order.indexOf(phase));
     });
+    if (phase === "cards") cards.start();
     if (phase === "review") renderSummary();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -210,11 +234,14 @@ async function renderScene(id) {
 
   forms.forEach((f) => setupQuiz(f, onQuizResult));
 
-  document.getElementById("to-quiz").onclick = () => {
+  document.getElementById("to-cards").onclick = () => setPhase("cards");
+  const startQuiz = () => {
     resetQuizState();
     setPhase("quiz");
     forms[0]?.elements.answer.focus({ preventScroll: true });
   };
+  document.getElementById("to-quiz").onclick = startQuiz;
+  document.getElementById("skip-cards").onclick = startQuiz;
   document.getElementById("give-up").onclick = () => setPhase("review");
   document.getElementById("retry").onclick = () => {
     forms.forEach(resetQuizForm);
@@ -224,6 +251,96 @@ async function renderScene(id) {
 
   resetQuizState();
   setPhase("learn");
+}
+
+// ---------- 외우기 카드 ----------
+// 학습 단어 + 대사로 카드 덱을 만든다. 단어와 글자가 같은 대사(예: ヤハ)는 한 장만.
+function buildDeck(scene) {
+  const deck = scene.vocab.map((v) => ({
+    kind: v.kind === "kanji" ? "한자" : "단어",
+    front: v.surface,
+    reading: v.reading,
+    meaning: v.meaning,
+  }));
+  const surfaces = new Set(scene.vocab.map((v) => v.surface));
+  for (const l of scene.lines) {
+    if (!surfaces.has(l.ja)) deck.push({ kind: "대사", front: l.ja, reading: l.reading, meaning: l.ko });
+  }
+  return deck;
+}
+
+function createCards(deck, onDone) {
+  const card = document.getElementById("flashcard");
+  const front = document.getElementById("card-front");
+  const back = document.getElementById("card-back");
+  const progress = document.getElementById("card-progress");
+  const tip = document.getElementById("card-tip");
+  const grade = document.getElementById("card-grade");
+  const controls = document.getElementById("card-controls");
+  const done = document.getElementById("cards-done");
+  const summary = document.getElementById("cards-summary");
+  const skip = document.getElementById("skip-cards");
+
+  let queue = [];
+  let knownFirstTry = 0;
+  let current = null;
+
+  function show() {
+    current = queue[0];
+    if (!current) return finish();
+    const known = deck.length - new Set(queue.map((c) => c.index)).size;
+    progress.textContent = `외운 카드 ${known} / ${deck.length}${current.again ? " · 다시 보는 카드" : ""}`;
+    front.innerHTML = `<span class="card-kind">${esc(current.kind)}</span><span class="card-ja" lang="ja">${esc(current.front)}</span>`;
+    back.innerHTML = `
+      <span class="card-kind">${esc(current.kind)}</span>
+      <span class="card-ja small" lang="ja">${esc(current.front)}</span>
+      ${current.reading ? `<span class="reading" lang="ja">${esc(current.reading)}</span>` : ""}
+      ${current.meaning ? `<span class="card-meaning">${esc(current.meaning)}</span>` : ""}`;
+    card.classList.remove("flipped");
+    card.setAttribute("aria-pressed", "false");
+    tip.hidden = false;
+    grade.hidden = true;
+  }
+
+  function flip() {
+    if (!current) return;
+    const flipped = card.classList.toggle("flipped");
+    card.setAttribute("aria-pressed", String(flipped));
+    tip.hidden = flipped;
+    grade.hidden = !flipped;
+  }
+
+  function answer(known) {
+    const c = queue.shift();
+    if (known) {
+      if (!c.again) knownFirstTry++;
+    } else {
+      queue.push({ ...c, again: true }); // 헷갈린 카드는 덱 맨 뒤로
+    }
+    show();
+  }
+
+  function finish() {
+    card.hidden = controls.hidden = skip.hidden = true;
+    progress.textContent = `외운 카드 ${deck.length} / ${deck.length}`;
+    summary.textContent = `${deck.length}장 중 ${knownFirstTry}장은 처음부터 알고 있었어요. 이제 정보 없이 퀴즈를 풀어 봐요!`;
+    done.hidden = false;
+    onDone();
+  }
+
+  card.onclick = flip;
+  document.getElementById("card-know").onclick = () => answer(true);
+  document.getElementById("card-again").onclick = () => answer(false);
+
+  return {
+    start() {
+      queue = deck.map((c, index) => ({ ...c, index }));
+      knownFirstTry = 0;
+      card.hidden = controls.hidden = skip.hidden = false;
+      done.hidden = true;
+      show();
+    },
+  };
 }
 
 // ---------- 이미지 뷰어 ----------
