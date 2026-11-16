@@ -1,0 +1,27 @@
+{
+  "id": 3,
+  "title": "TODO: 장면 제목",
+  "source_url": "",
+  "posted_at": null,
+  "level": 1,
+  "sort_order": 3,
+  "images": {
+    "ko": "/images/scenes/003/ko.png",
+    "furigana": "/images/scenes/003/furigana.png",
+    "ja": "/images/scenes/003/ja.png"
+  },
+  "lines": [
+    { "ja": "TODO", "reading": "", "ko": "" }
+  ],
+  "vocab": [
+    { "surface": "TODO", "reading": "", "meaning": "TODO", "kind": "word", "jlpt_level": null }
+  ],
+  "quizzes": [
+    {
+      "type": "short_answer",
+      "question": "TODO",
+      "answers": ["TODO"],
+      "explanation": null
+    }
+  ]
+}
