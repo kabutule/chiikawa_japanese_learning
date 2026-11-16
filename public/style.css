@@ -145,5 +145,44 @@ h2 { font-size: 1rem; margin: 24px 0 8px; color: var(--muted); }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 
+/* ---------- 단계(익히기 → 퀴즈 → 확인) ---------- */
+/* data-show 에 현재 단계가 없는 요소는 숨긴다 */
+#app[data-phase="learn"] [data-show]:not([data-show~="learn"]),
+#app[data-phase="quiz"] [data-show]:not([data-show~="quiz"]),
+#app[data-phase="review"] [data-show]:not([data-show~="review"]) { display: none; }
+/* 퀴즈 중에는 대사·단어를 숨긴다 (떠올려서 풀기) */
+#app[data-phase="quiz"] #study { display: none; }
+
+.steps {
+  display: flex; gap: 6px; list-style: none; padding: 0; margin: 0 0 12px;
+  counter-reset: step;
+}
+.steps li {
+  flex: 1; text-align: center; padding: 6px 0; border-radius: 999px;
+  background: var(--line); color: var(--muted); font-size: .8rem; font-weight: 600;
+  counter-increment: step;
+}
+.steps li::before { content: counter(step) ". "; }
+.steps li.done { background: #f6dce4; color: var(--accent-ink); }
+.steps li.current { background: var(--accent); color: #fff; }
+
+.phase-actions { margin: 20px 0 0; }
+.phase-actions .note { font-size: .85rem; color: var(--muted); margin: 0 0 10px; }
+.primary, .secondary {
+  display: inline-flex; justify-content: center; align-items: center;
+  width: 100%; padding: 13px 16px; border-radius: 12px;
+  font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+}
+.primary { border: 0; background: var(--accent-ink); color: #fff; }
+.secondary { border: 1px solid var(--line); background: var(--card); color: var(--text); }
+.button-row { display: flex; gap: 8px; }
+.button-row > * { flex: 1; }
+.summary {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px;
+}
+.summary-text { margin: 0 0 12px; font-weight: 600; }
+.summary.top { margin: 0 0 12px; }
+
 .scene-nav { display: flex; justify-content: space-between; margin: 28px 0 8px; }
 .scene-nav a { color: var(--accent-ink); }

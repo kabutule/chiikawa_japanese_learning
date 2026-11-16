@@ -6,8 +6,8 @@ import { rateLimit } from "../lib/rateLimit.mjs";
 
 export const quizzesRouter = Router();
 
-const GENERIC_HINT = "대사와 학습 단어 목록을 다시 한번 살펴보세요.";
-const FALLBACK_HINT = "지금은 자세한 채점이 어려워요. 단어 목록을 다시 확인하고, 허용되는 표기(일본어 또는 한국어)로 입력해 보세요.";
+const GENERIC_HINT = "원문 그림 속 말풍선을 다시 천천히 읽어 보세요. 익혔던 단어가 떠오를 거예요.";
+const FALLBACK_HINT = "지금은 자세한 채점이 어려워요. 원문 그림을 다시 보고, 일본어(히라가나·가타카나)나 한국어로 다시 입력해 보세요.";
 const ERROR_TYPES = new Set(["vocab", "reading", "context"]);
 const CLIENT_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 

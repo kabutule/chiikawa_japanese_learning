@@ -1,7 +1,14 @@
 // 장면 목록(#/) + 장면 화면(#/scenes/:id). 빌드 없이 쓰는 순수 JS.
+//
+// 장면 화면은 3단계로 진행한다.
+//   learn  (익히기)  모든 이미지 레이어 + 대사 + 단어를 보며 외운다
+//   quiz   (퀴즈)    원문 이미지만 남기고 대사·단어를 숨긴 채 답을 떠올려 입력
+//   review (확인)    결과 요약 + 숨겼던 정보 다시 공개, 다시 풀기 / 다음 장면
 const app = document.getElementById("app");
 
 const LAYER_LABEL = { ko: "번역", furigana: "요미가나", ja: "원문" };
+const ERROR_TYPE_LABEL = { vocab: "단어 뜻", reading: "읽기", context: "문맥" };
+const CLIENT_TIMEOUT_MS = 15000; // 서버 AI 타임아웃(10초)보다 길게
 
 // 문자열을 HTML 에 넣을 때는 반드시 이걸로 (데이터에 < & 가 있어도 안전)
 const esc = (s) =>
@@ -21,6 +28,17 @@ function showStatus(msg, isError = false) {
   app.innerHTML = `<p class="status${isError ? " error" : ""}">${esc(msg)}</p>`;
 }
 
+// 비로그인 풀이 기록용 랜덤 id. 저장이 막힌 환경이면 이번 접속 동안만 쓴다.
+const clientId = (() => {
+  try {
+    let id = localStorage.getItem("client_id");
+    if (!id) localStorage.setItem("client_id", (id = crypto.randomUUID()));
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+})();
+
 // ---------- 장면 목록 ----------
 async function renderList() {
   showStatus("불러오는 중…");
@@ -36,19 +54,26 @@ async function renderList() {
 }
 
 // ---------- 장면 화면 ----------
+// 같은 이미지를 두 레이어가 가리키면(예: 번역+요미가나 합본) 한 장으로 합친다
+function groupLayers(images) {
+  const layers = [];
+  for (const img of images) {
+    const prev = layers.at(-1);
+    const label = LAYER_LABEL[img.layer] ?? img.layer;
+    if (prev && prev.url === img.url) prev.labels.push(label);
+    else layers.push({ url: img.url, labels: [label], layers: [img.layer] });
+  }
+  return layers;
+}
+
 async function renderScene(id) {
   showStatus("불러오는 중…");
   const [scene, list] = await Promise.all([api(`/scenes/${id}`), getSceneList()]);
 
-  // 같은 이미지를 두 레이어가 가리키면(예: 번역+요미가나 합본) 한 번만 보여준다
-  const layers = [];
-  for (const img of scene.images) {
-    const prev = layers.at(-1);
-    if (prev && prev.url === img.url) prev.labels.push(LAYER_LABEL[img.layer] ?? img.layer);
-    else layers.push({ url: img.url, labels: [LAYER_LABEL[img.layer] ?? img.layer] });
-  }
-  // 다음 레이어로 넘길 때 바로 뜨도록 미리 로드
-  layers.forEach((l) => (new Image().src = l.url));
+  const allLayers = groupLayers(scene.images);
+  // 퀴즈 중에는 원문만. 원문이 없으면 마지막 레이어로 대신한다.
+  const quizLayers = [allLayers.find((l) => l.layers.includes("ja")) ?? allLayers.at(-1)];
+  allLayers.forEach((l) => (new Image().src = l.url)); // 미리 로드
 
   const idx = list.findIndex((s) => s.id === scene.id);
   const prevScene = list[idx - 1];
@@ -57,84 +82,209 @@ async function renderScene(id) {
   app.innerHTML = `
     <h1>${esc(scene.title)}</h1>
 
+    <ol class="steps" aria-label="학습 단계">
+      <li data-step="learn">익히기</li>
+      <li data-step="quiz">퀴즈</li>
+      <li data-step="review">확인</li>
+    </ol>
+
+    <div class="phase-actions summary top" data-show="review">
+      <p id="summary" class="summary-text"></p>
+      <div class="button-row">
+        <button class="secondary" id="retry">다시 익히고 풀기</button>
+        ${nextScene ? `<a class="primary" href="#/scenes/${nextScene.id}">다음 장면 ›</a>` : `<a class="primary" href="#/">장면 목록</a>`}
+      </div>
+    </div>
+
     <div class="viewer" id="viewer">
       <img id="layer-img" alt="">
       <span class="layer-tag" id="layer-tag"></span>
       <button class="nav prev" id="prev" aria-label="이전 이미지">‹</button>
       <button class="nav next" id="next" aria-label="다음 이미지">›</button>
     </div>
-    <div class="dots" id="dots">
-      ${layers.map((l, i) => `<button data-i="${i}">${esc(l.labels.join("+"))}</button>`).join("")}
+    <div class="dots" id="dots"></div>
+
+    <section class="study" id="study">
+      <h2>대사</h2>
+      <ul class="lines">
+        ${scene.lines
+          .map(
+            (l) => `<li>
+              <div class="ja" lang="ja">${esc(l.ja)}</div>
+              ${l.reading ? `<div class="reading" lang="ja">${esc(l.reading)}</div>` : ""}
+              ${l.ko ? `<div class="ko">${esc(l.ko)}</div>` : ""}
+            </li>`
+          )
+          .join("")}
+      </ul>
+
+      <h2>학습 단어</h2>
+      <div class="vocab">
+        ${scene.vocab
+          .map(
+            (v) => `<div class="word ${v.kind}">
+              <div class="surface" lang="ja">${esc(v.surface)}</div>
+              ${v.reading ? `<div class="reading" lang="ja">${esc(v.reading)}</div>` : ""}
+              <div>${esc(v.meaning)}</div>
+              <div class="meta">${v.kind === "kanji" ? "한자" : "단어"}${v.jlpt_level ? ` · N${esc(v.jlpt_level)}` : ""}</div>
+            </div>`
+          )
+          .join("")}
+      </div>
+    </section>
+
+    <div class="phase-actions" data-show="learn">
+      <p class="note">이미지를 넘겨 보고 대사와 단어를 외워 보세요. 퀴즈에서는 원문 그림만 보여요.</p>
+      <button class="primary" id="to-quiz">다 외웠어요, 퀴즈 풀기</button>
     </div>
 
-    <h2>대사</h2>
-    <ul class="lines">
-      ${scene.lines
-        .map(
-          (l) => `<li>
-            <div class="ja" lang="ja">${esc(l.ja)}</div>
-            ${l.reading ? `<div class="reading" lang="ja">${esc(l.reading)}</div>` : ""}
-            ${l.ko ? `<div class="ko">${esc(l.ko)}</div>` : ""}
-          </li>`
-        )
-        .join("")}
-    </ul>
+    <section id="quiz-section" data-show="quiz review">
+      <h2>퀴즈</h2>
+      <div class="quizzes">
+        ${scene.quizzes
+          .map(
+            (q, i) => `<form class="quiz" data-quiz-id="${esc(q.id)}" novalidate>
+              <label class="question" for="quiz-${esc(q.id)}"><span class="qnum">Q${i + 1}</span>${esc(q.question)}</label>
+              <div class="answer-row">
+                <input id="quiz-${esc(q.id)}" name="answer" type="text" maxlength="300" autocomplete="off"
+                       autocapitalize="off" spellcheck="false" placeholder="일본어나 한국어로 입력" required>
+                <button type="submit">제출</button>
+              </div>
+              <div class="result" aria-live="polite"></div>
+            </form>`
+          )
+          .join("")}
+      </div>
+      <div class="phase-actions" data-show="quiz">
+        <button class="secondary" id="give-up">모르겠어요, 확인하기</button>
+      </div>
+    </section>
 
-    <h2>학습 단어</h2>
-    <div class="vocab">
-      ${scene.vocab
-        .map(
-          (v) => `<div class="word ${v.kind}">
-            <div class="surface" lang="ja">${esc(v.surface)}</div>
-            ${v.reading ? `<div class="reading" lang="ja">${esc(v.reading)}</div>` : ""}
-            <div>${esc(v.meaning)}</div>
-            <div class="meta">${v.kind === "kanji" ? "한자" : "단어"}${v.jlpt_level ? ` · N${esc(v.jlpt_level)}` : ""}</div>
-          </div>`
-        )
-        .join("")}
-    </div>
 
-    <h2>퀴즈</h2>
-    <div class="quizzes">
-      ${scene.quizzes
-        .map(
-          (q, i) => `<form class="quiz" data-quiz-id="${esc(q.id)}" novalidate>
-            <label class="question" for="quiz-${esc(q.id)}"><span class="qnum">Q${i + 1}</span>${esc(q.question)}</label>
-            <div class="answer-row">
-              <input id="quiz-${esc(q.id)}" name="answer" type="text" maxlength="300" autocomplete="off"
-                     autocapitalize="off" spellcheck="false" placeholder="일본어나 한국어로 입력" required>
-              <button type="submit">제출</button>
-            </div>
-            <div class="result" aria-live="polite"></div>
-          </form>`
-        )
-        .join("")}
-    </div>
-
-    <nav class="scene-nav">
+    <nav class="scene-nav" data-show="learn review">
       ${prevScene ? `<a href="#/scenes/${prevScene.id}">‹ ${esc(prevScene.title)}</a>` : "<span></span>"}
       ${nextScene ? `<a href="#/scenes/${nextScene.id}">${esc(nextScene.title)} ›</a>` : "<span></span>"}
     </nav>`;
 
-  setupViewer(layers);
-  document.querySelectorAll("form.quiz").forEach(setupQuiz);
+  const viewer = createViewer();
+  const forms = [...document.querySelectorAll("form.quiz")];
+  // 퀴즈별 상태: 시도 횟수, 정답 여부
+  let quizState = new Map();
+  const resetQuizState = () => (quizState = new Map(forms.map((f) => [f.dataset.quizId, { tries: 0, solved: false }])));
+
+  function setPhase(phase) {
+    app.dataset.phase = phase;
+    viewer.setLayers(phase === "quiz" ? quizLayers : allLayers);
+    document.querySelectorAll(".steps li").forEach((li) => {
+      const order = ["learn", "quiz", "review"];
+      li.classList.toggle("current", li.dataset.step === phase);
+      li.classList.toggle("done", order.indexOf(li.dataset.step) < order.indexOf(phase));
+    });
+    if (phase === "review") renderSummary();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function renderSummary() {
+    const states = [...quizState.values()];
+    const solved = states.filter((s) => s.solved).length;
+    const firstTry = states.filter((s) => s.solved && s.tries === 1).length;
+    const total = states.length;
+    const msg =
+      solved === total
+        ? `${total}문제를 모두 맞혔어요! 한 번에 맞힌 문제는 ${firstTry}개예요.`
+        : `${total}문제 중 ${solved}문제를 맞혔어요. 아래 대사와 단어를 다시 보고 한 번 더 도전해 보세요.`;
+    document.getElementById("summary").textContent = msg;
+    // 확인 단계에서는 입력을 잠근다
+    forms.forEach((f) => {
+      f.elements.answer.readOnly = true;
+      f.querySelector("button").disabled = true;
+    });
+  }
+
+  function onQuizResult(quizId, correct) {
+    const s = quizState.get(quizId);
+    s.tries += 1;
+    if (correct) s.solved = true;
+    if ([...quizState.values()].every((x) => x.solved)) setTimeout(() => setPhase("review"), 1200);
+  }
+
+  forms.forEach((f) => setupQuiz(f, onQuizResult));
+
+  document.getElementById("to-quiz").onclick = () => {
+    resetQuizState();
+    setPhase("quiz");
+    forms[0]?.elements.answer.focus({ preventScroll: true });
+  };
+  document.getElementById("give-up").onclick = () => setPhase("review");
+  document.getElementById("retry").onclick = () => {
+    forms.forEach(resetQuizForm);
+    resetQuizState();
+    setPhase("learn");
+  };
+
+  resetQuizState();
+  setPhase("learn");
 }
 
-// ---------- 퀴즈 ----------
-// 비로그인 풀이 기록용 랜덤 id. 저장이 막힌 환경이면 이번 접속 동안만 쓴다.
-const clientId = (() => {
-  try {
-    let id = localStorage.getItem("client_id");
-    if (!id) localStorage.setItem("client_id", (id = crypto.randomUUID()));
-    return id;
-  } catch {
-    return crypto.randomUUID();
+// ---------- 이미지 뷰어 ----------
+function createViewer() {
+  const img = document.getElementById("layer-img");
+  const tag = document.getElementById("layer-tag");
+  const prevBtn = document.getElementById("prev");
+  const nextBtn = document.getElementById("next");
+  const dotsEl = document.getElementById("dots");
+  const viewer = document.getElementById("viewer");
+  let layers = [];
+  let current = 0;
+
+  function show(i) {
+    current = Math.max(0, Math.min(layers.length - 1, i));
+    const layer = layers[current];
+    img.src = layer.url;
+    img.alt = `${layer.labels.join("+")} 이미지`;
+    tag.textContent = layer.labels.join("+");
+    const single = layers.length < 2;
+    prevBtn.hidden = nextBtn.hidden = single;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === layers.length - 1;
+    [...dotsEl.children].forEach((d, j) => d.setAttribute("aria-current", String(j === current)));
   }
-})();
 
-const ERROR_TYPE_LABEL = { vocab: "단어 뜻", reading: "읽기", context: "문맥" };
-const CLIENT_TIMEOUT_MS = 15000; // 서버 AI 타임아웃(10초)보다 길게
+  prevBtn.onclick = () => show(current - 1);
+  nextBtn.onclick = () => show(current + 1);
 
+  // 가로 스와이프 (터치·마우스 공통)
+  let startX = null;
+  viewer.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    startX = e.clientX;
+  });
+  viewer.addEventListener("pointerup", (e) => {
+    if (startX == null) return;
+    const dx = e.clientX - startX;
+    startX = null;
+    if (Math.abs(dx) > 40) show(current + (dx < 0 ? 1 : -1));
+  });
+  viewer.addEventListener("pointercancel", () => (startX = null));
+
+  return {
+    setLayers(next) {
+      layers = next;
+      dotsEl.innerHTML = layers.length < 2 ? "" : layers.map((l, i) => `<button data-i="${i}">${esc(l.labels.join("+"))}</button>`).join("");
+      [...dotsEl.children].forEach((d) => (d.onclick = () => show(Number(d.dataset.i))));
+      show(0);
+    },
+  };
+}
+
+// 키보드 ← → 로도 넘기기 (입력 중일 때는 제외)
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest?.("input, textarea")) return;
+  if (e.key === "ArrowLeft") document.getElementById("prev")?.click();
+  if (e.key === "ArrowRight") document.getElementById("next")?.click();
+});
+
+// ---------- 퀴즈 ----------
 async function submitAnswer(quizId, answer) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), CLIENT_TIMEOUT_MS);
@@ -170,11 +320,21 @@ function renderResult(r) {
   }
   const type = ERROR_TYPE_LABEL[r.error_type];
   return `
-    <p class="verdict ng">아쉬워요, 다시 해 볼까요?</p>
+    <p class="verdict ng">아쉬워요, 다시 떠올려 볼까요?</p>
     <p class="hint">${type ? `<span class="tag">${esc(type)}</span>` : ""}${esc(r.hint)}</p>`;
 }
 
-function setupQuiz(form) {
+function resetQuizForm(form) {
+  form.classList.remove("solved");
+  form.elements.answer.value = "";
+  form.elements.answer.readOnly = false;
+  const button = form.querySelector("button");
+  button.disabled = false;
+  button.textContent = "제출";
+  form.querySelector(".result").innerHTML = "";
+}
+
+function setupQuiz(form, onResult) {
   const input = form.elements.answer;
   const button = form.querySelector("button");
   const result = form.querySelector(".result");
@@ -186,6 +346,7 @@ function setupQuiz(form) {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (input.readOnly) return;
     const answer = input.value.trim();
     if (!answer) {
       result.innerHTML = `<p class="hint">답을 입력해 주세요.</p>`;
@@ -202,6 +363,7 @@ function setupQuiz(form) {
       const r = await submitAnswer(form.dataset.quizId, answer);
       result.innerHTML = renderResult(r);
       form.classList.toggle("solved", r.correct);
+      onResult(form.dataset.quizId, r.correct);
       if (r.correct) {
         button.textContent = "정답";
         return; // 맞힌 퀴즈는 잠가 둔다
@@ -210,62 +372,18 @@ function setupQuiz(form) {
     } catch (err) {
       result.innerHTML = `<p class="hint error">${esc(err.message)}</p>`;
     }
+    // 그사이 확인 단계로 넘어갔으면 다시 열지 않는다
+    if (app.dataset.phase !== "quiz") return;
     button.disabled = false;
     input.readOnly = false;
     button.textContent = "제출";
   });
 }
 
-function setupViewer(layers) {
-  const img = document.getElementById("layer-img");
-  const tag = document.getElementById("layer-tag");
-  const prevBtn = document.getElementById("prev");
-  const nextBtn = document.getElementById("next");
-  const dots = [...document.querySelectorAll("#dots button")];
-  const viewer = document.getElementById("viewer");
-  let current = 0;
-
-  function show(i) {
-    current = Math.max(0, Math.min(layers.length - 1, i));
-    const layer = layers[current];
-    img.src = layer.url;
-    img.alt = `${layer.labels.join("+")} 이미지`;
-    tag.textContent = layer.labels.join("+");
-    prevBtn.disabled = current === 0;
-    nextBtn.disabled = current === layers.length - 1;
-    dots.forEach((d, j) => d.setAttribute("aria-current", String(j === current)));
-  }
-
-  prevBtn.onclick = () => show(current - 1);
-  nextBtn.onclick = () => show(current + 1);
-  dots.forEach((d) => (d.onclick = () => show(Number(d.dataset.i))));
-
-  // 가로 스와이프 (터치·마우스 공통)
-  let startX = null;
-  viewer.addEventListener("pointerdown", (e) => {
-    if (e.target.closest("button")) return;
-    startX = e.clientX;
-  });
-  viewer.addEventListener("pointerup", (e) => {
-    if (startX == null) return;
-    const dx = e.clientX - startX;
-    startX = null;
-    if (Math.abs(dx) > 40) show(current + (dx < 0 ? 1 : -1));
-  });
-  viewer.addEventListener("pointercancel", () => (startX = null));
-
-  show(0);
-}
-
-// 키보드 ← → 로도 넘기기
-document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowLeft") document.getElementById("prev")?.click();
-  if (e.key === "ArrowRight") document.getElementById("next")?.click();
-});
-
 // ---------- 라우터 ----------
 async function route() {
   const m = location.hash.match(/^#\/scenes\/(\d+)$/);
+  delete app.dataset.phase;
   try {
     if (m) await renderScene(m[1]);
     else await renderList();
