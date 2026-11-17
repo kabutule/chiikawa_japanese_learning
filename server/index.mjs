@@ -10,6 +10,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.PORT || 3000);
 
 const app = express();
+// 프록시(nginx·Railway 등) 1단 뒤에서 실제 접속자 IP 를 req.ip 로 받기 위함 (rateLimit 이 IP 기준)
+app.set("trust proxy", 1);
 app.use(express.json({ limit: "10kb" }));
 
 app.use("/api/scenes", scenesRouter);
