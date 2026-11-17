@@ -48,7 +48,7 @@ INSERT INTO scene_images (id, scene_id, layer, image_url, sort_order) VALUES (40
 INSERT INTO scene_images (id, scene_id, layer, image_url, sort_order) VALUES (402, 4, 'furigana', '/images/scenes/004/furigana.png', 2);
 INSERT INTO scene_images (id, scene_id, layer, image_url, sort_order) VALUES (403, 4, 'ja', '/images/scenes/004/ja.png', 3);
 INSERT INTO scene_lines (scene_id, sort_order, ja_text, reading, ko_text) VALUES (4, 1, 'クンクン…', 'くんくん…', '킁킁…');
-INSERT INTO scene_lines (scene_id, sort_order, ja_text, reading, ko_text) VALUES (4, 2, '車がらっきょうくさいッ', 'くるまがらっきょうくさいッ', '차에서 락교 냄새가 나잇');
+INSERT INTO scene_lines (scene_id, sort_order, ja_text, reading, ko_text) VALUES (4, 2, '車がらっきょうくさいッ', 'くるまがらっきょうくさいッ', '차에서 락교 냄새가!');
 INSERT INTO vocab (surface, reading, meaning, kind, jlpt_level) VALUES ('車', 'くるま', '자동차, 차', 'word', 5) ON DUPLICATE KEY UPDATE meaning = VALUES(meaning), kind = VALUES(kind), jlpt_level = VALUES(jlpt_level);
 INSERT INTO scene_vocab (scene_id, vocab_id) SELECT 4, id FROM vocab WHERE surface = '車' AND reading = 'くるま';
 INSERT INTO vocab (surface, reading, meaning, kind, jlpt_level) VALUES ('車', 'くるま / しゃ', '수레 차', 'kanji', 5) ON DUPLICATE KEY UPDATE meaning = VALUES(meaning), kind = VALUES(kind), jlpt_level = VALUES(jlpt_level);
@@ -63,8 +63,8 @@ INSERT INTO quizzes (id, scene_id, type, question, sort_order) VALUES (401, 4, '
 INSERT INTO quiz_answers (quiz_id, answers, explanation) VALUES (401, '["くるま","クルマ","쿠루마"]', '정답은 2번 대사 「車がらっきょうくさいッ」에 나오는 「車」에서 확인할 수 있어요. 여기서 「車」는 「くるま」라고 읽고, 뜻은 ‘자동차, 차’입니다. 뒤의 「くさい」는 명사 뒤에 붙어 ‘~냄새가 나다’라는 뜻이라서, 전체적으로 “차에서 락교 냄새가 나!”라는 말이에요.');
 INSERT INTO quizzes (id, scene_id, type, question, sort_order) VALUES (402, 4, 'short_answer', '「くさい」는 무슨 뜻일까요?', 2);
 INSERT INTO quiz_answers (quiz_id, answers, explanation) VALUES (402, '["냄새가 나다","냄새가 난다","냄새 나","냄새나다","구리다","냄새"]', '정답은 2번 대사 「車がらっきょうくさいッ」에서 확인할 수 있어요. 「くさい(くさい)」는 ‘냄새가 나다’, 특히 고약하거나 강한 냄새가 난다는 뜻이에요. 여기서는 「らっきょうくさい」처럼 명사 뒤에 붙어 ‘락교 냄새가 나다’라는 의미가 됩니다.');
-INSERT INTO quizzes (id, scene_id, type, question, sort_order) VALUES (403, 4, 'short_answer', '랏코가 냄새를 맡는 소리 「킁킁」을 일본어로 뭐라고 할까요?', 3);
-INSERT INTO quiz_answers (quiz_id, answers, explanation) VALUES (403, '["クンクン","くんくん","쿤쿤"]', '정답은 1번 대사 「クンクン…」에서 바로 나와요. 「クンクン(くんくん)」은 냄새를 맡을 때 나는 소리로, 한국어의 “킁킁”에 해당합니다. 일본어 의성어·의태어는 이렇게 가타카나로 쓰면 소리나 느낌이 더 또렷하게 느껴지는 경우가 많아요.');
+INSERT INTO quizzes (id, scene_id, type, question, sort_order) VALUES (403, 4, 'short_answer', '랏코는 차에서 무슨 냄새가 난다고 말하고 있나요?', 3);
+INSERT INTO quiz_answers (quiz_id, answers, explanation) VALUES (403, '["락교","락쿄","랏쿄","랏쿄오","염교","락교 냄새","らっきょう","ラッキョウ"]', '정답은 2번 대사 「車がらっきょうくさいッ」에서 알 수 있어요. 「らっきょう(らっきょう)」는 락교/염교라는 뜻이고, 「くさい(くさい)」는 ‘냄새가 나다’라는 뜻이라서 「らっきょうくさい」는 ‘락교 냄새가 난다’가 됩니다. 명사 뒤에 「くさい」가 붙으면 ‘~냄새가 나다’라는 표현으로 쓸 수 있어요.');
 
 -- ===== 장면 5: 하치와레 요미토레나이욧
 INSERT INTO scenes (id, title, source_url, posted_at, level, sort_order) VALUES (5, '하치와레 요미토레나이욧', NULL, NULL, 1, 5);
